@@ -37,20 +37,20 @@ function renderTasksAsBubbles(tasks) {
         .domain([d3.timeDay.offset(earliestDate, -1), d3.timeDay.offset(latestDate, 1)])  // Adjust by 1 day before and after
         .range([50, width - 50]);
 
-    // Create y-axis scale for positioning tasks based on their index (order of appearance)
-    const yScale = d3.scaleBand()
-        .domain(tasks.map((d, i) => i))  // Create a band scale based on task index (position in list)
-        .range([50, height - 50])  // Adjust the range to fit the available space
-        .padding(0.1);  // Space between tasks
+    // Create y-axis scale for 24-hour day with 2-hour intervals
+    const yScale = d3.scaleTime()
+        .domain([new Date(0, 0, 0, 0, 0), new Date(0, 0, 0, 24, 0)])  // Midnight to midnight
+        .range([50, height - 50]);
 
     // Create x-axis
     const xAxis = d3.axisBottom(xScale)
         .tickFormat(d3.timeFormat("%b %d"))  // Format the dates as "March 10"
         .tickSize(10);
 
-    // Create y-axis for task order (index-based)
+    // Create y-axis for 24-hour day with 2-hour intervals
     const yAxis = d3.axisLeft(yScale)
-        .tickFormat("")  // Hide the axis values for now
+        .ticks(d3.timeHour.every(2))  // 2-hour intervals
+        .tickFormat(d3.timeFormat("%H:%M"))  // Format the times as "00:00", "02:00"
         .tickSize(10);
 
     // Clear existing content before appending new elements
@@ -82,8 +82,9 @@ function renderTasksAsBubbles(tasks) {
         .attr("cx", function(d) {
             return xScale(d.dueDate);
         })
-        .attr("cy", function(d, i) {
-            return yScale(i) + yScale.bandwidth() / 2;  // Center the bubbles vertically in each band
+        .attr("cy", function(d) {
+            const timeOfDay = new Date(0, 0, 0, d.dueDate.getHours(), d.dueDate.getMinutes());
+            return yScale(timeOfDay);
         })
         .attr("r", function(d) {
             return priorityScale[d.priority] || 30;
@@ -93,7 +94,26 @@ function renderTasksAsBubbles(tasks) {
             if (d.priority === "LOW") return "green"; // Green for low priority
             return "yellow";  // Yellow for medium priority
         })
-        .attr("opacity", 0.7);
+        .attr("opacity", 0.7)
+        .on("click", function(event, d) {
+            // Show task details box
+            const detailsBox = document.getElementById("task-details-box");
+            const bubble = d3.select(this);
+            const x = parseFloat(bubble.attr("cx"));
+            const y = parseFloat(bubble.attr("cy"));
+
+            // Update task details content
+            document.getElementById("details-title").innerText = `Title: ${d.title}`;
+            document.getElementById("details-description").innerText = `Description: ${d.description}`;
+            document.getElementById("details-dueDate").innerText = `Due Date: ${d.dueDate.toLocaleDateString()}`;
+            document.getElementById("details-priority").innerText = `Priority: ${d.priority}`;
+            document.getElementById("details-completed").innerText = `Completed: ${d.completed ? "Yes" : "No"}`;
+
+            // Position and show the details box
+            detailsBox.style.left = `${x + 10}px`;
+            detailsBox.style.top = `${y + 10}px`;
+            detailsBox.style.display = "block";
+        });
 
     // Add tooltips
     bubbles.append("title")
@@ -107,9 +127,10 @@ function renderTasksAsBubbles(tasks) {
         .enter()
         .append("text")
         .attr("x", function(d) { return xScale(d.dueDate); })
-        .attr("y", function(d, i) {
+        .attr("y", function(d) {
+            const timeOfDay = new Date(0, 0, 0, d.dueDate.getHours(), d.dueDate.getMinutes());
             const radius = priorityScale[d.priority] || 30;
-            return yScale(i) + yScale.bandwidth() / 2 + radius + 15;  // Position labels below bubbles
+            return yScale(timeOfDay) + radius + 15;  // Position labels below bubbles
         })
         .attr("text-anchor", "middle")
         .text(function(d) { return d.title; })
@@ -178,4 +199,9 @@ document.getElementById("task-form").addEventListener("submit", async (e) => {
 // Handle cancel button click
 document.getElementById("cancel-btn").addEventListener("click", () => {
     document.getElementById("task-form-container").style.display = "none";
+});
+
+// Handle close details button click
+document.getElementById("close-details-btn").addEventListener("click", () => {
+    document.getElementById("task-details-box").style.display = "none";
 });
