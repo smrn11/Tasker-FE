@@ -23,6 +23,24 @@ select {
     border: 1px solid #ccc;
 }
 
+.new-task-btn {
+    padding: 10px 15px;
+    font-size: 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.new-task-btn:hover {
+    background-color: #45a049;
+}
+
 #graph-container {
     margin-top: 20px;
     background-color: #fff;
@@ -30,19 +48,23 @@ select {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
 }
 
-#task-info {
+#task-info-box {
     font-family: Arial, sans-serif;
     color: #333;
     background-color: #fff;
     border: 1px solid #ccc;
     padding: 5px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    position: absolute;
     visibility: hidden;
+    pointer-events: none;
 }
 
-.task-info-box {
+.task-form-container {
+    display: none;
     margin-top: 20px;
     padding: 20px;
     background-color: #fff;
@@ -50,25 +72,63 @@ select {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     max-width: 500px;
-    display: none;
 }
 
-.task-info-box h2 {
+.task-form-container h2 {
     font-size: 20px;
     font-weight: bold;
     margin-bottom: 10px;
 }
 
-.task-info-box p {
+.task-form-container form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.task-form-container label {
+    font-size: 16px;
+}
+
+.task-form-container input, .task-form-container textarea, .task-form-container select {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.task-form-container button {
+    padding: 10px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.task-form-container button:hover {
+    background-color: #45a049;
+}
+
+.task-details {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: none;
+}
+
+.task-details h2 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.task-details p {
     font-size: 16px;
     margin: 5px 0;
-}
-
-text {
-    font-size: 14px;
-    fill: #555;
-}
-
-text:hover {
-    font-weight: bold;
 }
