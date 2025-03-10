@@ -143,13 +143,14 @@ document.getElementById("task-form").addEventListener("submit", async (e) => {
     const completed = document.getElementById("task-completed").checked;
 
     // Prepare the task data
+    const userId = document.getElementById('user-select').value;
     const newTask = {
         title,
         description,
         dueDate,
         priority,
         completed,
-        userId: 1 // You can dynamically adjust this if needed
+        userId
     };
 
     try {
