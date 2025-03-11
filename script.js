@@ -40,121 +40,121 @@ function renderTasksAsBubbles(tasks) {
     const width = svg.node().getBoundingClientRect().width;
     const height = svg.node().getBoundingClientRect().height;
 
-    // Set up bubble size mapping for priority
     const priorityScale = { HIGH: 50, MEDIUM: 35, LOW: 20 };
 
-    // Convert dueDate string to Date object
     tasks.forEach(task => {
         task.dueDate = new Date(task.dueDate);
     });
 
-    // Sort tasks based on dueDate
     tasks.sort((a, b) => a.dueDate - b.dueDate);
 
-    // Get the earliest and latest task dates
     const earliestDate = d3.min(tasks, task => task.dueDate);
     const latestDate = d3.max(tasks, task => task.dueDate);
 
-    // Create x-axis scale (time) with 1 day padding before and after the tasks' range
     const xScale = d3.scaleTime()
-        .domain([d3.timeDay.offset(earliestDate, -1), d3.timeDay.offset(latestDate, 1)])  // Adjust by 1 day before and after
+        .domain([d3.timeDay.offset(earliestDate, -1), d3.timeDay.offset(latestDate, 1)])
         .range([50, width - 50]);
 
-    // Create y-axis scale for 24-hour day with 2-hour intervals
     const yScale = d3.scaleTime()
-        .domain([new Date(0, 0, 0, 0, 0), new Date(0, 0, 0, 24, 0)])  // Midnight to midnight
+        .domain([new Date(0, 0, 0, 0, 0), new Date(0, 0, 0, 24, 0)])
         .range([50, height - 50]);
 
-    // Create x-axis
     const xAxis = d3.axisBottom(xScale)
-        .tickFormat(d3.timeFormat("%b %d"))  // Format the dates as "March 10"
+        .tickFormat(d3.timeFormat("%b %d"))
         .tickSize(10);
 
-    // Create y-axis for 24-hour day with 2-hour intervals
     const yAxis = d3.axisLeft(yScale)
-        .ticks(d3.timeHour.every(2))  // 2-hour intervals
-        .tickFormat(d3.timeFormat("%H:%M"))  // Format the times as "00:00", "02:00"
+        .ticks(d3.timeHour.every(2))
+        .tickFormat(d3.timeFormat("%H:%M"))
         .tickSize(10);
 
-    // Clear existing content before appending new elements
     svg.selectAll("*").remove();
 
-    // Append x-axis to SVG and style the font size of labels
     svg.append("g")
-        .attr("transform", `translate(0, ${height - 50})`)  // Position it at the bottom
+        .attr("transform", `translate(0, ${height - 50})`)
         .call(xAxis)
         .selectAll("text")
         .style("font-size", "14px")
-        .style("fill", "gray")  // Gray color for text
-        .style("font-weight", "bold")  // Thicker font for visibility
-        .style("opacity", 0)  // Start with opacity 0 for animation
+        .style("fill", "gray")
+        .style("font-weight", "bold")
+        .style("opacity", 0)
         .transition()
         .duration(1000)
-        .style("opacity", 1);  // Fade in text
+        .style("opacity", 1);
 
-    // Append y-axis to SVG and style the font size of labels (left side)
     svg.append("g")
-        .attr("transform", "translate(50, 0)")  // Position it on the left side
+        .attr("transform", "translate(50, 0)")
         .call(yAxis)
         .selectAll("text")
         .style("font-size", "14px")
-        .style("fill", "gray")  // Gray color for text
-        .style("font-weight", "bold")  // Thicker font for visibility
-        .style("opacity", 0)  // Start with opacity 0 for animation
+        .style("fill", "gray")
+        .style("font-weight", "bold")
+        .style("opacity", 0)
         .transition()
         .duration(1000)
-        .style("opacity", 1);  // Fade in text
+        .style("opacity", 1);
 
-    // Bind data to circles (bubbles)
     const bubbles = svg.selectAll("circle")
         .data(tasks)
         .enter()
         .append("circle")
-        .attr("cx", function(d) {
-            return xScale(d.dueDate);
-        })
-        .attr("cy", function(d) {
-            const timeOfDay = new Date(0, 0, 0, d.dueDate.getHours(), d.dueDate.getMinutes());
-            return yScale(timeOfDay);
-        })
-        .attr("r", 0)  // Start with radius 0 for animation
-        .attr("fill", function(d) {
-            if (d.priority === "HIGH") return "red";  // Red for high priority
-            if (d.priority === "LOW") return "green"; // Green for low priority
-            return "yellow";  // Yellow for medium priority
-        })
-        .attr("opacity", 0.7)
-        .transition()
-        .duration(1000)
-        .attr("r", function(d) {
-            return priorityScale[d.priority] || 30;
-        });
+        .attr("cx", d => xScale(d.dueDate))
+        .attr("cy", d => yScale(new Date(0, 0, 0, d.dueDate.getHours(), d.dueDate.getMinutes())))
+        .attr("r", 0)
+        .attr("fill", d => d.priority === "HIGH" ? "red" : d.priority === "LOW" ? "green" : "yellow")
+        .attr("opacity", 0.7);
 
-    // Add tooltips
     bubbles.append("title")
-        .text(function(d) {
-            return `${d.title} - Due: ${d.dueDate.toLocaleDateString()}`;
-        });
+        .text(d => `${d.title} - Due: ${d.dueDate.toLocaleDateString()}`);
 
-    // Add labels for task titles
+    bubbles.transition()
+        .duration(1000)
+        .attr("r", d => priorityScale[d.priority] || 30);
+
     svg.selectAll("text.task-title")
         .data(tasks)
         .enter()
         .append("text")
-        .attr("x", function(d) { return xScale(d.dueDate); })
-        .attr("y", function(d) {
-            const timeOfDay = new Date(0, 0, 0, d.dueDate.getHours(), d.dueDate.getMinutes());
-            const radius = priorityScale[d.priority] || 30;
-            return yScale(timeOfDay) + radius + 15;  // Position labels below bubbles
-        })
+        .attr("x", d => xScale(d.dueDate))
+        .attr("y", d => yScale(new Date(0, 0, 0, d.dueDate.getHours(), d.dueDate.getMinutes())) + (priorityScale[d.priority] || 30) + 15)
         .attr("text-anchor", "middle")
-        .text(function(d) { return d.title; })
+        .text(d => d.title)
         .style("font-size", "12px")
         .style("fill", "black")
-        .style("opacity", 0)  // Start with opacity 0 for animation
+        .style("opacity", 0)
         .transition()
         .duration(1000)
-        .style("opacity", 1);  // Fade in text
+        .style("opacity", 1);
+
+    bubbles.on("click", function(event, d) {
+        const detailsBox = document.getElementById("task-details-box");
+        document.getElementById("details-title").textContent = d.title;
+        document.getElementById("details-description").textContent = `Description: ${d.description}`;
+        document.getElementById("details-dueDate").textContent = `Due Date: ${d.dueDate.toLocaleString()}`;
+        document.getElementById("details-priority").textContent = `Priority: ${d.priority}`;
+        document.getElementById("details-completed").textContent = `Completed: ${d.completed ? "Yes" : "No"}`;
+
+        const bubble = d3.select(this);
+        const bubbleX = parseFloat(bubble.attr("cx"));
+        const bubbleY = parseFloat(bubble.attr("cy"));
+
+        detailsBox.style.display = "block";
+        detailsBox.style.left = `${bubbleX + 50}px`;
+        detailsBox.style.top = `${bubbleY + 50}px`;
+        detailsBox.style.opacity = 0;
+        detailsBox.style.transition = "opacity 0.5s";
+        setTimeout(() => {
+            detailsBox.style.opacity = 1;
+        }, 0);
+    });
+
+    document.getElementById("close-details-btn").addEventListener("click", () => {
+        const detailsBox = document.getElementById("task-details-box");
+        detailsBox.style.opacity = 0;
+        setTimeout(() => {
+            detailsBox.style.display = "none";
+        }, 500);
+    });
 }
 
 // Handle user selection change
@@ -167,45 +167,33 @@ document.getElementById('user-select').addEventListener('change', function(event
 fetchUsers();
 
 document.getElementById("new-task-btn").addEventListener("click", () => {
-    const formContainer = document.getElementById("task-form-container");
-    formContainer.style.display = "block";
+    document.getElementById("task-form-container").style.display = "block";
 });
 
-// Function to handle the task form submission
+// Handle task form submission
 document.getElementById("task-form").addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Collect data from the form
     const title = document.getElementById("task-title").value;
     const description = document.getElementById("task-description").value;
     const dueDate = document.getElementById("task-dueDate").value;
     const priority = document.getElementById("task-priority").value;
     const completed = document.getElementById("task-completed").checked;
-
-    // Prepare the task data
     const userId = document.getElementById('user-select').value;
-    const newTask = {
-        title,
-        description,
-        dueDate,
-        priority,
-        completed,
-        userId
-    };
+
+    const newTask = { title, description, dueDate, priority, completed, userId };
 
     try {
         const response = await fetch("http://localhost:8080/tasker", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(newTask)
         });
 
         if (response.ok) {
             alert("Task created successfully!");
             document.getElementById("task-form-container").style.display = "none";
-            fetchTasks(userId); // Refresh the task list for the selected user
+            fetchTasks(userId);
         } else {
             alert("Failed to create task");
         }
@@ -215,12 +203,6 @@ document.getElementById("task-form").addEventListener("submit", async (e) => {
     }
 });
 
-// Handle cancel button click
 document.getElementById("cancel-btn").addEventListener("click", () => {
     document.getElementById("task-form-container").style.display = "none";
-});
-
-// Handle close details button click
-document.getElementById("close-details-btn").addEventListener("click", () => {
-    document.getElementById("task-details-box").style.display = "none";
 });
