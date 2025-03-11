@@ -20,7 +20,7 @@
             text-align: center;
         }
 
-        label, select {
+        label, select, input {
             font-size: 16px;
             margin-right: 10px;
             margin-bottom: 20px;
@@ -119,12 +119,16 @@
 <body>
     <div id="task-timeline">
         <h1>Task Timeline</h1>
-        <p>Select User to View Tasks Timeline</p>
+        <p>Select User and Week to View Tasks Timeline</p>
+        
         <label for="user-select">Select User:</label>
         <select id="user-select">
             <!-- Options will be populated dynamically -->
         </select>
 
+        <label for="week-select">Select Week:</label>
+        <input type="week" id="week-select">
+        
         <button id="new-task-btn">+</button>
     </div>
 

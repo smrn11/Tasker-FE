@@ -1,15 +1,46 @@
-// Fetch tasks for the selected user
+// Fetch tasks for the selected user and week
 function fetchTasks(userId) {
+    const weekInput = document.getElementById("week-select").value;
+    const [year, week] = weekInput ? weekInput.split('-W') : getCurrentYearWeek();
+
     fetch(`http://localhost:8080/tasker/list/${userId}`)
         .then(response => response.json())
         .then(tasks => {
             console.log("Fetched tasks:", tasks);
-            renderTasksAsBubbles(tasks);
+
+            // Filter tasks based on the selected week
+            const filteredTasks = tasks.filter(task => {
+                const taskDate = new Date(task.dueDate);
+                const taskYear = taskDate.getFullYear();
+                const taskWeek = getWeekNumber(taskDate);
+                return taskYear === parseInt(year) && taskWeek === parseInt(week);
+            });
+
+            renderTasksAsBubbles(filteredTasks);
         })
         .catch(error => {
             console.error("Error fetching tasks:", error);
         });
 }
+
+// Function to get the current year and week
+function getCurrentYearWeek() {
+    const today = new Date();
+    return [today.getFullYear(), getWeekNumber(today)];
+}
+
+// Function to get the week number of a date
+function getWeekNumber(date) {
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
+// Handle week selection change
+document.getElementById("week-select").addEventListener("change", function() {
+    const userId = document.getElementById("user-select").value;
+    fetchTasks(userId);
+});
 
 // Fetch users and populate the dropdown
 function fetchUsers() {
@@ -17,14 +48,20 @@ function fetchUsers() {
         .then(response => response.json())
         .then(users => {
             const userSelect = document.getElementById('user-select');
-            userSelect.innerHTML = ''; // Clear existing options
+            userSelect.innerHTML = '';
+
             users.forEach(user => {
                 const option = document.createElement('option');
                 option.value = user.id;
                 option.textContent = user.firstName + ' ' + user.lastName;
                 userSelect.appendChild(option);
             });
-            // Fetch tasks for the first user by default
+
+            // Set default week to the current week
+            const weekInput = document.getElementById("week-select");
+            const [currentYear, currentWeek] = getCurrentYearWeek();
+            weekInput.value = `${currentYear}-W${String(currentWeek).padStart(2, '0')}`;
+
             if (users.length > 0) {
                 fetchTasks(users[0].id);
             }
@@ -72,27 +109,11 @@ function renderTasksAsBubbles(tasks) {
 
     svg.append("g")
         .attr("transform", `translate(0, ${height - 50})`)
-        .call(xAxis)
-        .selectAll("text")
-        .style("font-size", "14px")
-        .style("fill", "gray")
-        .style("font-weight", "bold")
-        .style("opacity", 0)
-        .transition()
-        .duration(1000)
-        .style("opacity", 1);
+        .call(xAxis);
 
     svg.append("g")
         .attr("transform", "translate(50, 0)")
-        .call(yAxis)
-        .selectAll("text")
-        .style("font-size", "14px")
-        .style("fill", "gray")
-        .style("font-weight", "bold")
-        .style("opacity", 0)
-        .transition()
-        .duration(1000)
-        .style("opacity", 1);
+        .call(yAxis);
 
     const bubbles = svg.selectAll("circle")
         .data(tasks)
@@ -121,10 +142,7 @@ function renderTasksAsBubbles(tasks) {
         .text(d => d.title)
         .style("font-size", "12px")
         .style("fill", "black")
-        .style("opacity", 0)
-        .transition()
-        .duration(1000)
-        .style("opacity", 1);
+        .style("opacity", 0);
 
     bubbles.on("click", function(event, d) {
         const detailsBox = document.getElementById("task-details-box");
@@ -159,8 +177,7 @@ function renderTasksAsBubbles(tasks) {
 
 // Handle user selection change
 document.getElementById('user-select').addEventListener('change', function(event) {
-    const userId = event.target.value;
-    fetchTasks(userId);
+    fetchTasks(event.target.value);
 });
 
 // Initial fetch of users and tasks
@@ -168,39 +185,6 @@ fetchUsers();
 
 document.getElementById("new-task-btn").addEventListener("click", () => {
     document.getElementById("task-form-container").style.display = "block";
-});
-
-// Handle task form submission
-document.getElementById("task-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const title = document.getElementById("task-title").value;
-    const description = document.getElementById("task-description").value;
-    const dueDate = document.getElementById("task-dueDate").value;
-    const priority = document.getElementById("task-priority").value;
-    const completed = document.getElementById("task-completed").checked;
-    const userId = document.getElementById('user-select').value;
-
-    const newTask = { title, description, dueDate, priority, completed, userId };
-
-    try {
-        const response = await fetch("http://localhost:8080/tasker", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newTask)
-        });
-
-        if (response.ok) {
-            alert("Task created successfully!");
-            document.getElementById("task-form-container").style.display = "none";
-            fetchTasks(userId);
-        } else {
-            alert("Failed to create task");
-        }
-    } catch (error) {
-        console.error("Error creating task:", error);
-        alert("Error creating task");
-    }
 });
 
 document.getElementById("cancel-btn").addEventListener("click", () => {
