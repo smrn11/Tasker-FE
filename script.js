@@ -11,6 +11,29 @@ function fetchTasks(userId) {
         });
 }
 
+// Fetch users and populate the dropdown
+function fetchUsers() {
+    fetch('http://localhost:8080/tasker/user/list')
+        .then(response => response.json())
+        .then(users => {
+            const userSelect = document.getElementById('user-select');
+            userSelect.innerHTML = ''; // Clear existing options
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.firstName + ' ' + user.lastName;
+                userSelect.appendChild(option);
+            });
+            // Fetch tasks for the first user by default
+            if (users.length > 0) {
+                fetchTasks(users[0].id);
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching users:", error);
+        });
+}
+
 // Render tasks as bubbles in the graph
 function renderTasksAsBubbles(tasks) {
     const svg = d3.select("svg");
@@ -144,8 +167,8 @@ document.getElementById('user-select').addEventListener('change', function(event
     fetchTasks(userId);
 });
 
-// Initial fetch of tasks for user 1
-fetchTasks(1);
+// Initial fetch of users and tasks
+fetchUsers();
 
 document.getElementById("new-task-btn").addEventListener("click", () => {
     const formContainer = document.getElementById("task-form-container");
@@ -186,7 +209,7 @@ document.getElementById("task-form").addEventListener("submit", async (e) => {
         if (response.ok) {
             alert("Task created successfully!");
             document.getElementById("task-form-container").style.display = "none";
-            fetchTasks(1); // Refresh the task list
+            fetchTasks(userId); // Refresh the task list for the selected user
         } else {
             alert("Failed to create task");
         }
