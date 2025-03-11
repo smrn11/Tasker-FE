@@ -86,7 +86,11 @@ function renderTasksAsBubbles(tasks) {
         .selectAll("text")
         .style("font-size", "14px")
         .style("fill", "gray")  // Gray color for text
-        .style("font-weight", "bold");  // Thicker font for visibility
+        .style("font-weight", "bold")  // Thicker font for visibility
+        .style("opacity", 0)  // Start with opacity 0 for animation
+        .transition()
+        .duration(1000)
+        .style("opacity", 1);  // Fade in text
 
     // Append y-axis to SVG and style the font size of labels (left side)
     svg.append("g")
@@ -95,7 +99,11 @@ function renderTasksAsBubbles(tasks) {
         .selectAll("text")
         .style("font-size", "14px")
         .style("fill", "gray")  // Gray color for text
-        .style("font-weight", "bold");  // Thicker font for visibility
+        .style("font-weight", "bold")  // Thicker font for visibility
+        .style("opacity", 0)  // Start with opacity 0 for animation
+        .transition()
+        .duration(1000)
+        .style("opacity", 1);  // Fade in text
 
     // Bind data to circles (bubbles)
     const bubbles = svg.selectAll("circle")
@@ -109,33 +117,17 @@ function renderTasksAsBubbles(tasks) {
             const timeOfDay = new Date(0, 0, 0, d.dueDate.getHours(), d.dueDate.getMinutes());
             return yScale(timeOfDay);
         })
-        .attr("r", function(d) {
-            return priorityScale[d.priority] || 30;
-        })
+        .attr("r", 0)  // Start with radius 0 for animation
         .attr("fill", function(d) {
             if (d.priority === "HIGH") return "red";  // Red for high priority
             if (d.priority === "LOW") return "green"; // Green for low priority
             return "yellow";  // Yellow for medium priority
         })
         .attr("opacity", 0.7)
-        .on("click", function(event, d) {
-            // Show task details box
-            const detailsBox = document.getElementById("task-details-box");
-            const bubble = d3.select(this);
-            const x = parseFloat(bubble.attr("cx"));
-            const y = parseFloat(bubble.attr("cy"));
-
-            // Update task details content
-            document.getElementById("details-title").innerText = `Title: ${d.title}`;
-            document.getElementById("details-description").innerText = `Description: ${d.description}`;
-            document.getElementById("details-dueDate").innerText = `Due Date: ${d.dueDate.toLocaleDateString()}`;
-            document.getElementById("details-priority").innerText = `Priority: ${d.priority}`;
-            document.getElementById("details-completed").innerText = `Completed: ${d.completed ? "Yes" : "No"}`;
-
-            // Position and show the details box
-            detailsBox.style.left = `${x + 10}px`;
-            detailsBox.style.top = `${y + 10}px`;
-            detailsBox.style.display = "block";
+        .transition()
+        .duration(1000)
+        .attr("r", function(d) {
+            return priorityScale[d.priority] || 30;
         });
 
     // Add tooltips
@@ -158,7 +150,11 @@ function renderTasksAsBubbles(tasks) {
         .attr("text-anchor", "middle")
         .text(function(d) { return d.title; })
         .style("font-size", "12px")
-        .style("fill", "black");
+        .style("fill", "black")
+        .style("opacity", 0)  // Start with opacity 0 for animation
+        .transition()
+        .duration(1000)
+        .style("opacity", 1);  // Fade in text
 }
 
 // Handle user selection change
