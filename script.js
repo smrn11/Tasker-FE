@@ -3,6 +3,8 @@ function fetchTasks(userId) {
     const weekInput = document.getElementById("week-select").value;
     const [year, week] = weekInput ? weekInput.split('-W') : getCurrentYearWeek();
 
+    const { startOfWeek, endOfWeek } = getWeekRange(parseInt(year), parseInt(week));
+
     fetch(`http://localhost:8080/tasker/list/${userId}`)
         .then(response => response.json())
         .then(tasks => {
@@ -11,12 +13,10 @@ function fetchTasks(userId) {
             // Filter tasks based on the selected week
             const filteredTasks = tasks.filter(task => {
                 const taskDate = new Date(task.dueDate);
-                const taskYear = taskDate.getFullYear();
-                const taskWeek = getWeekNumber(taskDate);
-                return taskYear === parseInt(year) && taskWeek === parseInt(week);
+                return taskDate >= startOfWeek && taskDate <= endOfWeek;
             });
 
-            renderTasksAsBubbles(filteredTasks);
+            renderTasksAsBubbles(filteredTasks, startOfWeek, endOfWeek);
         })
         .catch(error => {
             console.error("Error fetching tasks:", error);
@@ -34,6 +34,17 @@ function getWeekNumber(date) {
     const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
     const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
     return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+}
+
+// Function to get the start and end date of a given year and week number
+function getWeekRange(year, week) {
+    const firstDayOfYear = new Date(year, 0, 1);
+    const daysToMonday = (firstDayOfYear.getDay() === 0 ? 6 : firstDayOfYear.getDay() - 1); // Adjust for Monday as start
+    const startOfWeek = new Date(year, 0, 1 + (week - 1) * 7 - daysToMonday);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    return { startOfWeek, endOfWeek };
 }
 
 // Handle week selection change
@@ -72,7 +83,7 @@ function fetchUsers() {
 }
 
 // Render tasks as bubbles in the graph
-function renderTasksAsBubbles(tasks) {
+function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
     const svg = d3.select("svg");
     const width = svg.node().getBoundingClientRect().width;
     const height = svg.node().getBoundingClientRect().height;
@@ -85,11 +96,8 @@ function renderTasksAsBubbles(tasks) {
 
     tasks.sort((a, b) => a.dueDate - b.dueDate);
 
-    const earliestDate = d3.min(tasks, task => task.dueDate);
-    const latestDate = d3.max(tasks, task => task.dueDate);
-
     const xScale = d3.scaleTime()
-        .domain([d3.timeDay.offset(earliestDate, -1), d3.timeDay.offset(latestDate, 1)])
+        .domain([startOfWeek, endOfWeek])
         .range([50, width - 50]);
 
     const yScale = d3.scaleTime()
@@ -97,8 +105,8 @@ function renderTasksAsBubbles(tasks) {
         .range([50, height - 50]);
 
     const xAxis = d3.axisBottom(xScale)
-        .tickFormat(d3.timeFormat("%b %d"))
-        .tickSize(10);
+        .ticks(d3.timeDay.every(1))
+        .tickFormat(d3.timeFormat("%a %d"));
 
     const yAxis = d3.axisLeft(yScale)
         .ticks(d3.timeHour.every(2))
@@ -182,11 +190,3 @@ document.getElementById('user-select').addEventListener('change', function(event
 
 // Initial fetch of users and tasks
 fetchUsers();
-
-document.getElementById("new-task-btn").addEventListener("click", () => {
-    document.getElementById("task-form-container").style.display = "block";
-});
-
-document.getElementById("cancel-btn").addEventListener("click", () => {
-    document.getElementById("task-form-container").style.display = "none";
-});
