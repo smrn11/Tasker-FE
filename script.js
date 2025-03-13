@@ -188,5 +188,49 @@ document.getElementById('user-select').addEventListener('change', function(event
     fetchTasks(event.target.value);
 });
 
+// Show the task form container when the "new-task-btn" button is clicked
+document.getElementById("new-task-btn").addEventListener("click", () => {
+    document.getElementById("task-form-container").style.display = "block";
+});
+
+// Hide the task form container when the "cancel-btn" button is clicked
+document.getElementById("cancel-btn").addEventListener("click", () => {
+    document.getElementById("task-form-container").style.display = "none";
+});
+
+// Handle form submission to create a new task
+document.getElementById("task-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const userId = document.getElementById("user-select").value;
+
+    const newTask = {
+        title: document.getElementById("task-title").value,
+        description: document.getElementById("task-description").value,
+        dueDate: document.getElementById("task-dueDate").value,
+        priority: document.getElementById("task-priority").value,
+        completed: document.getElementById("task-completed").checked,
+        userId: userId  // Include the selected user's ID
+    };
+
+    fetch('http://localhost:8080/tasker', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newTask)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Task created:", data);
+        document.getElementById("task-form-container").style.display = "none";
+        // Optionally, refresh the task list or update the UI
+        fetchTasks(userId);
+    })
+    .catch(error => {
+        console.error("Error creating task:", error);
+    });
+});
+
 // Initial fetch of users and tasks
 fetchUsers();
