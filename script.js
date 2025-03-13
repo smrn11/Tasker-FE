@@ -156,7 +156,7 @@ function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
         const detailsBox = document.getElementById("task-details-box");
         document.getElementById("details-title").textContent = d.title;
         document.getElementById("details-description").textContent = `Description: ${d.description}`;
-        document.getElementById("details-dueDate").textContent = `Due Date: ${d.dueDate.toISOString().replace('T', ' ').slice(0, 19)}`; // Format for display
+        document.getElementById("details-dueDate").textContent = `Due Date: ${new Date(d.dueDate).toLocaleString()}`; // Format for display
         document.getElementById("details-priority").textContent = `Priority: ${d.priority}`;
         document.getElementById("details-completed").textContent = `Completed: ${d.completed ? "Yes" : "No"}`;
 
@@ -177,7 +177,7 @@ function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
         detailsBox.dataset.taskId = d.id;
         detailsBox.dataset.taskTitle = d.title;
         detailsBox.dataset.taskDescription = d.description;
-        detailsBox.dataset.taskDueDate = d.dueDate.toISOString().slice(0, 16); // Format for datetime-local input
+        detailsBox.dataset.taskDueDate = new Date(d.dueDate).toISOString().slice(0, 16); // Format for datetime-local input
         detailsBox.dataset.taskPriority = d.priority;
         detailsBox.dataset.taskCompleted = d.completed;
     });
@@ -302,7 +302,7 @@ document.getElementById("task-form").addEventListener("submit", (event) => {
     const newTask = {
         title: document.getElementById("task-title").value,
         description: document.getElementById("task-description").value,
-        dueDate: document.getElementById("task-dueDate").value,
+        dueDate: new Date(document.getElementById("task-dueDate").value).toISOString(), // Ensure correct format
         priority: document.getElementById("task-priority").value,
         completed: document.getElementById("task-completed").checked,
         userId: userId  // Include the selected user's ID
