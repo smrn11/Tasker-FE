@@ -156,7 +156,7 @@ function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
         const detailsBox = document.getElementById("task-details-box");
         document.getElementById("details-title").textContent = d.title;
         document.getElementById("details-description").textContent = `Description: ${d.description}`;
-        document.getElementById("details-dueDate").textContent = `Due Date: ${d.dueDate.toLocaleString()}`;
+        document.getElementById("details-dueDate").textContent = `Due Date: ${d.dueDate.toISOString().replace('T', ' ').slice(0, 19)}`; // Format for display
         document.getElementById("details-priority").textContent = `Priority: ${d.priority}`;
         document.getElementById("details-completed").textContent = `Completed: ${d.completed ? "Yes" : "No"}`;
 
@@ -172,14 +172,109 @@ function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
         setTimeout(() => {
             detailsBox.style.opacity = 1;
         }, 0);
+
+        // Store task data in details box for later use
+        detailsBox.dataset.taskId = d.id;
+        detailsBox.dataset.taskTitle = d.title;
+        detailsBox.dataset.taskDescription = d.description;
+        detailsBox.dataset.taskDueDate = d.dueDate.toISOString().slice(0, 16); // Format for datetime-local input
+        detailsBox.dataset.taskPriority = d.priority;
+        detailsBox.dataset.taskCompleted = d.completed;
     });
 
-    document.getElementById("close-details-btn").addEventListener("click", () => {
+    // Event delegation for close and update buttons
+    document.getElementById("task-details-box").addEventListener("click", (event) => {
         const detailsBox = document.getElementById("task-details-box");
-        detailsBox.style.opacity = 0;
-        setTimeout(() => {
-            detailsBox.style.display = "none";
-        }, 500);
+
+        if (event.target.id === "close-details-btn") {
+            detailsBox.style.opacity = 0;
+            setTimeout(() => {
+                detailsBox.style.display = "none";
+                // Restore the original content of the details box
+                detailsBox.innerHTML = `
+                    <button id="close-details-btn" style="float: right;">X</button>
+                    <h3 id="details-title"></h3>
+                    <p id="details-description"></p>
+                    <p id="details-dueDate"></p>
+                    <p id="details-priority"></p>
+                    <p id="details-completed"></p>
+                    <button id="update-task-btn">Update</button>
+                `;
+            }, 500);
+        }
+
+        if (event.target.id === "update-task-btn") {
+            const taskId = detailsBox.dataset.taskId;
+
+            // Transform details into editable fields
+            detailsBox.innerHTML = `
+                <button id="close-details-btn" style="float: right;">X</button>
+                <h3><input type="text" id="edit-title" value="${detailsBox.dataset.taskTitle}"></h3>
+                <p>Description: <textarea id="edit-description">${detailsBox.dataset.taskDescription}</textarea></p>
+                <p>Due Date: <input type="datetime-local" id="edit-dueDate" value="${detailsBox.dataset.taskDueDate}"></p>
+                <p>Priority: 
+                    <select id="edit-priority">
+                        <option value="HIGH" ${detailsBox.dataset.taskPriority === "HIGH" ? "selected" : ""}>High</option>
+                        <option value="MEDIUM" ${detailsBox.dataset.taskPriority === "MEDIUM" ? "selected" : ""}>Medium</option>
+                        <option value="LOW" ${detailsBox.dataset.taskPriority === "LOW" ? "selected" : ""}>Low</option>
+                    </select>
+                </p>
+                <p>Completed: <input type="checkbox" id="edit-completed" ${detailsBox.dataset.taskCompleted === "true" ? "checked" : ""}></p>
+                <button id="save-task-btn">Save</button>
+            `;
+
+            // Re-add close button event listener
+            document.getElementById("close-details-btn").addEventListener("click", () => {
+                detailsBox.style.opacity = 0;
+                setTimeout(() => {
+                    detailsBox.style.display = "none";
+                }, 500);
+            });
+
+            // Add save button event listener
+            document.getElementById("save-task-btn").addEventListener("click", () => {
+                const updatedTask = {
+                    id: taskId,
+                    title: document.getElementById("edit-title").value,
+                    description: document.getElementById("edit-description").value,
+                    dueDate: new Date(document.getElementById("edit-dueDate").value).toISOString(), // Ensure correct format
+                    priority: document.getElementById("edit-priority").value,
+                    completed: document.getElementById("edit-completed").checked
+                };
+
+                fetch(`http://localhost:8080/tasker/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedTask)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Task updated:", data);
+                    detailsBox.style.opacity = 0;
+                    setTimeout(() => {
+                        detailsBox.style.display = "none";
+                        // Restore the original content of the details box
+                        detailsBox.innerHTML = `
+                            <button id="close-details-btn" style="float: right;">X</button>
+                            <h3 id="details-title"></h3>
+                            <p id="details-description"></p>
+                            <p id="details-dueDate"></p>
+                            <p id="details-priority"></p>
+                            <p id="details-completed"></p>
+                            <button id="update-task-btn">Update</button>
+                        `;
+                    }, 500);
+                    // Optionally, refresh the task list or update the UI
+                    const userId = document.getElementById("user-select").value;
+                    fetchTasks(userId);
+                })
+                .catch(error => {
+                    console.error("Error updating task:", error);
+                });
+            });
+        }
     });
 }
 
