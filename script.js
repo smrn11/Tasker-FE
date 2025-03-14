@@ -135,13 +135,29 @@ function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
 
     svg.selectAll("*").remove();
 
-    svg.append("g")
+    // Append x-axis with initial scale of 0
+    const xAxisGroup = svg.append("g")
         .attr("transform", `translate(0, ${height - 50})`)
+        .attr("opacity", 0)
         .call(xAxis);
 
-    svg.append("g")
+    // Append y-axis with initial scale of 0
+    const yAxisGroup = svg.append("g")
         .attr("transform", "translate(50, 0)")
+        .attr("opacity", 0)
         .call(yAxis);
+
+    // Transition for x-axis
+    xAxisGroup.transition()
+        .duration(1000)
+        .attr("opacity", 1)
+        .attr("transform", `translate(0, ${height - 50})`);
+
+    // Transition for y-axis
+    yAxisGroup.transition()
+        .duration(1000)
+        .attr("opacity", 1)
+        .attr("transform", "translate(50, 0)");
 
     const bubbles = svg.selectAll("circle")
         .data(tasks)
