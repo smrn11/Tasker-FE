@@ -4,122 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tasker</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        #task-timeline {
-            background-color: #f0f0f0;
-            padding: 10px 20px;
-            text-align: center;
-        }
-
-        label, select, input {
-            font-size: 16px;
-            margin-right: 10px;
-            margin-bottom: 20px;
-        }
-
-        #new-task-btn {
-            padding: 10px 15px;
-            font-size: 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        #new-task-btn:hover {
-            background-color: #45a049;
-        }
-
-        #graph-container {
-            flex-grow: 1;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #fff;
-            position: relative;
-        }
-
-        svg {
-            width: 100%;
-            height: 80%;
-        }
-
-        #task-details {
-            margin-top: 20px;
-            padding: 20px;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            display: none;
-        }
-
-        #task-form-container {
-            display: none;
-            padding: 20px;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 400px;
-        }
-
-        .task-form-container input,
-        .task-form-container select,
-        .task-form-container textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        .task-form-container button {
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .task-form-container button:hover {
-            background-color: #45a049;
-        }
-
-        #cancel-btn {
-            background-color: #f44336;
-            margin-top: 10px;
-        }
-
-        #cancel-btn:hover {
-            background-color: #e53935;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="task-timeline">
-        <h1>Task Timeline</h1>
-        <p>Select User and Week to View Tasks Timeline</p>
+        <h1>Tasker</h1>
+        <h2>Task Management, but better.</h2>
         
         <label for="user-select">Select User:</label>
         <select id="user-select">
