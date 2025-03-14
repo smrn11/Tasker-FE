@@ -12,7 +12,7 @@ function fetchTasks(userId) {
 
             // Filter tasks based on the selected week
             const filteredTasks = tasks.filter(task => {
-                const taskDate = new Date(task.dueDate);
+                const taskDate = parseDate(task.dueDate);
                 return taskDate >= startOfWeek && taskDate <= endOfWeek;
             });
 
@@ -21,6 +21,26 @@ function fetchTasks(userId) {
         .catch(error => {
             console.error("Error fetching tasks:", error);
         });
+}
+
+// Function to parse the date string from the backend
+function parseDate(dateString) {
+    const [datePart, timePart] = dateString.split(' ');
+    const [month, day, year] = datePart.split('/');
+    const [time, period] = timePart.split(' ');
+    const [hours, minutes] = time.split(':');
+    const hours24 = period === 'PM' && hours !== '12' ? parseInt(hours) + 12 : hours === '12' && period === 'AM' ? 0 : parseInt(hours);
+    return new Date(year, month - 1, day, hours24, minutes);
+}
+
+// Function to format the date for datetime-local input
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
 // Function to get the current year and week
@@ -91,7 +111,7 @@ function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
     const priorityScale = { HIGH: 50, MEDIUM: 35, LOW: 20 };
 
     tasks.forEach(task => {
-        task.dueDate = new Date(task.dueDate);
+        task.dueDate = parseDate(task.dueDate);
     });
 
     tasks.sort((a, b) => a.dueDate - b.dueDate);
@@ -156,7 +176,7 @@ function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
         const detailsBox = document.getElementById("task-details-box");
         document.getElementById("details-title").textContent = d.title;
         document.getElementById("details-description").textContent = `Description: ${d.description}`;
-        document.getElementById("details-dueDate").textContent = `Due Date: ${new Date(d.dueDate).toLocaleString()}`; // Format for display
+        document.getElementById("details-dueDate").textContent = `Due Date: ${d.dueDate.toLocaleString()}`; // Format for display
         document.getElementById("details-priority").textContent = `Priority: ${d.priority}`;
         document.getElementById("details-completed").textContent = `Completed: ${d.completed ? "Yes" : "No"}`;
 
@@ -177,7 +197,7 @@ function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
         detailsBox.dataset.taskId = d.id;
         detailsBox.dataset.taskTitle = d.title;
         detailsBox.dataset.taskDescription = d.description;
-        detailsBox.dataset.taskDueDate = new Date(d.dueDate).toISOString().slice(0, 16); // Format for datetime-local input
+        detailsBox.dataset.taskDueDate = formatDateForInput(d.dueDate); // Format for datetime-local input
         detailsBox.dataset.taskPriority = d.priority;
         detailsBox.dataset.taskCompleted = d.completed;
     });
@@ -237,7 +257,7 @@ function renderTasksAsBubbles(tasks, startOfWeek, endOfWeek) {
                     id: taskId,
                     title: document.getElementById("edit-title").value,
                     description: document.getElementById("edit-description").value,
-                    dueDate: new Date(document.getElementById("edit-dueDate").value).toISOString(), // Ensure correct format
+                    dueDate: document.getElementById("edit-dueDate").value, // Use the string directly
                     priority: document.getElementById("edit-priority").value,
                     completed: document.getElementById("edit-completed").checked
                 };
@@ -302,7 +322,7 @@ document.getElementById("task-form").addEventListener("submit", (event) => {
     const newTask = {
         title: document.getElementById("task-title").value,
         description: document.getElementById("task-description").value,
-        dueDate: new Date(document.getElementById("task-dueDate").value).toISOString(), // Ensure correct format
+        dueDate: document.getElementById("task-dueDate").value, // Use the string directly
         priority: document.getElementById("task-priority").value,
         completed: document.getElementById("task-completed").checked,
         userId: userId  // Include the selected user's ID
